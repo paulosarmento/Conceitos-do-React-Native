@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import api from './services/api';
 
 import {
   SafeAreaView,
@@ -11,77 +10,68 @@ import {
   TouchableOpacity,
 } from "react-native";
 
+import api from "./services/api";
+
 export default function App() {
 
-  const [repositories, setRepositories] = useState([]);
+  const [repo, setRepo] = useState([]);
 
   useEffect(() => {
-
-    api.get('repositories').then(response => {
-      setRepositories(response.data);
-    })
-
-  }, []);
-
+    api.get('/repositories').then(response => {
+      setRepo(response.data);
+    });
+  }, [])
 
   async function handleLikeRepository(id) {
-    const response = await api.post(`repositories/${id}/like`);
+    // Implement "Like Repository" functionality
+    const response = await api.post(`/repositories/${id}/like`);
 
-    const likedRepository = response.data;
- 
-    const repositoriesUpdated = repositories.map(repository => {
-      if (repository.id === id){
-        return likedRepository;
-      }else{
-        return repository;
-      }
-    });
+    const repository = repo.map(repo => repo.id === id ? response.data : repo);
 
-    setRepositories(repositoriesUpdated);
+    setRepo(repository);
   }
 
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#7159c1" />
       <SafeAreaView style={styles.container}>
-        <FlatList
-          data={repositories}
-          keyExtractor={repository => repository.id}
-          renderItem={({ item: repository }) => (
-            <View style={styles.repositoryContainer}>
-            <Text style={styles.repository}>{repository.title}</Text>
+        <View style={styles.repositoryContainer}>
+          <Text style={styles.repository}>Repository</Text>
+          <FlatList 
+            data={repo}
+            keyExtractor={repo => repo.id}
+            renderItem={({item}) => (
+              <>
+                <View style={styles.techsContainer}>
+                  {item.techs.map((tech, index) =>  
+                      <Text key={index} style={styles.tech}>
+                        {tech}
+                      </Text>
+                  )}
+                </View>
 
-            <View style={styles.techsContainer}>
-            {repository.techs.map(tech => (
-              <Text key={tech} style={styles.tech} >
-                {tech}
-              </Text>
+                <View style={styles.likesContainer}>
+                  <Text
+                    style={styles.likeText}
+                    // Remember to replace "1" below with repository ID: {`repository-likes-${repository.id}`}
+                    testID={`repository-likes-${item.id}`}
+                  >
+                    {item.likes} curtidas
+                  </Text>
+                </View>
 
-            ))}
-            </View>
-
-            <View style={styles.likesContainer}>
-              <Text
-                style={styles.likeText}
-                // Remember to replace "1" below with repository ID: {`repository-likes-${repository.id}`}
-                testID={`repository-likes-${repository.id}`}
-              >
-                {repositories.likes} curtidas
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => handleLikeRepository(repository.id)}
-              // Remember to replace "1" below with repository ID: {`like-button-${repository.id}`}
-              testID={`like-button-${repository.id}`}
-            >
-              <Text style={styles.buttonText}>Curtir</Text>
-            </TouchableOpacity>
-          </View>
-          )}
-        
-        />
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => handleLikeRepository(item.id)}
+                  // Remember to replace "1" below with repository ID: {`like-button-${repository.id}`}
+                  testID={`like-button-${item.id}`}
+                >
+                  <Text style={styles.buttonText}>Curtir</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          />
+        </View>
       </SafeAreaView>
     </>
   );
